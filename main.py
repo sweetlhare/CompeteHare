@@ -1,5 +1,6 @@
 import streamlit as st
 import os
+from io import StringIO
 import pandas as pd
 import numpy as np
 
@@ -8,7 +9,7 @@ from deta import Deta
 
 deta_key = st.secrets['deta_key']
 deta = Deta(deta_key)
-deta_drive = deta.Drive("hahastart_object_detection")
+deta_drive = deta.Drive("name of drive")
 
 
 from metric import calculate_metric
@@ -16,7 +17,6 @@ from metric import calculate_metric
 
 # <------------------------------------------------------------------------->
 
-# st.set_page_config(layout="wide")
 
 registration_columns = [
     'Login',
@@ -25,7 +25,6 @@ registration_columns = [
     'Telegram',
     'FIO',
 ]
-from io import StringIO
 
 def load_users(path_to_file='assets/users_database.csv'):
     users_database = pd.read_csv(StringIO(str(deta_drive.get(path_to_file).read(), 'utf-8')))
@@ -62,67 +61,72 @@ rating = load_rating()
 
 # Sidebar Menu
 with st.sidebar:
-    st.title('ХаХаСтарт: Object Detection')
+    st.title('Name of competition')
     add_selectbox = st.radio(
-        "Раздел",
-        ("Информация о задаче", "Рейтинг", "Регистрация", "Загрузка решения")
+        "Menu",
+        ("Task description", "Leaderbord", "Registration", "Send solution")
     )
 
 # Task Description
-if add_selectbox == 'Информация о задаче':
+if add_selectbox == 'Task description':
     st.header(add_selectbox)
+    st.text('''
+    Write description of your task here.
+    You can also add some charts and tables.
+    '''
+    )
 
 # Leaderboard
-if add_selectbox == 'Рейтинг':
+if add_selectbox == 'Leaderbord':
     st.header(add_selectbox)
     st.dataframe(rating)
 
 # New User Registration
-if add_selectbox == 'Регистрация':
+if add_selectbox == 'Registration':
     st.header(add_selectbox)
 
     st.text('''
-    Заполните поля ниже, чтобы зарегистрироваться в соревновании. 
-    Логин и пароль нужен для загрузки решений.
-    Остальная информация для связи с вами.
-    * - обязательно к заполнению.''')
+    Fill in the fields below to register in the competition. 
+    Login and password are needed to send solutions.
+    The rest of the information to contact you.
+    * - required to be filled in.''')
 
-    login = st.text_input('Логин *')
-    password = st.text_input('Пароль *')
-    fio = st.text_input('ФИО *')
+    login = st.text_input('Login *')
+    password = st.text_input('Password *')
+    fio = st.text_input('Full name *')
     email = st.text_input('Email *')
     telegram = st.text_input('Telegram')
 
-    registration_button = st.button('Зарегистрироваться')
+    registration_button = st.button('Register')
 
     if registration_button:
         if login and password and email:
             if login in users_database.index.values and users_database.loc[login, 'Password'] != password:
-                st.text('Пользователь с таким логином уже существует.')
+                st.text('A user with this username already exists.')
                 st.text('''
-                Если вы забыли пароль, напишите запрос на восстановление
-                на почту ХХХ с почты, на которую зарегистрирован аккаунт.''')
+                If you forgot your password, write a recovery request
+                to the XXX@gmail.com from the email to which the account is registered.''')
             else:
                 users_database = update_users(login, [password, email, telegram, fio])
-                st.text('Вы успешно зарегистрировались! Можно загружать решения.')
+                st.text('You have successfully registered! You can upload solutions.')
         else:
-            st.text('Регистрация не удалась. Проверьте, что все обязательные поля заполнены верно.')
+            st.text('Registration failed. Check that all required fields are filled in correctly.')
 
 # Solution uploading
-if add_selectbox == 'Загрузка решения':
+if add_selectbox == 'Send solution':
     st.header(add_selectbox)
 
-    st.text('Введите логин и пароль, чтобы получить доступ к загрузке решения.')
+    st.text('Enter your username and password to access the download of the solution.')
     
-    login = st.text_input('Логин')
-    password = st.text_input('Пароль')
+    login = st.text_input('Login')
+    password = st.text_input('Password')
 
     if login and password \
     and login in users_database.index.values \
     and users_database.loc[login, 'Password'] == password:
-        uploaded_file = st.file_uploader('Загрузите файл с решением', accept_multiple_files=False, type=['csv'])
+        uploaded_file = st.file_uploader('Upload the solution file', accept_multiple_files=False, type=['csv'])
         if uploaded_file:
             metric = calculate_metric(uploaded_file, gt)
             rating = update_rating(login, metric)
-            st.text(f'Полученная метрика: {0.9999}')
+            st.text(f'Resulting metric: {metric}')
                    
