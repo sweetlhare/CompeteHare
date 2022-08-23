@@ -21,34 +21,35 @@ from metric import calculate_metric
 registration_columns = [
     'Login',
     'Password',
-    'Email'
-    'Telegram'
-    'FIO'
+    'Email',
+    'Telegram',
+    'FIO',
 ]
+from io import StringIO
 
 def load_users(path_to_file='assets/users_database.csv'):
-    users_database = deta_drive.get(path_to_file)
+    users_database = pd.read_csv(StringIO(str(deta_drive.get(path_to_file).read(), 'utf-8')))
+    users_database = users_database.set_index('Login')
     return users_database
 
 def update_users(login, user_values, path_to_file='assets/users_database.csv'):
     users_database.loc[str(login), registration_columns[1:]] = user_values
-    users_database['password'] = users_database['password'].astype(str)
+    users_database['Password'] = users_database['Password'].astype(str)
     users_database.to_csv(path_to_file)
     deta_drive.put(path_to_file, path=f"./{path_to_file}")
     return users_database
 
 def load_gt(path_to_file='assets/gt.csv'):
-    gt_file = deta_drive.get(path_to_file)
+    gt_file = pd.read_csv(StringIO(str(deta_drive.get(path_to_file).read(), 'utf-8')))
     return gt_file
 
 def load_rating(path_to_file='assets/rating.csv'):
-    rating_file = deta_drive.get(path_to_file)
+    rating_file = pd.read_csv(StringIO(str(deta_drive.get(path_to_file).read(), 'utf-8')))
     return rating_file
 
 def update_rating(login, metric, path_to_file='assets/rating.csv'):
-    rating.loc[rating.shape[0], 'Login'] = login
-    rating.loc[rating.shape[0], 'Metric'] = metric
-    rating.to_csv(path_to_file)
+    rating.loc[rating.shape[0], ['Login', 'Metric']] = [login, metric]
+    rating.to_csv(path_to_file, index=False)
     deta_drive.put(path_to_file, path=f"./{path_to_file}")
     return rating
 
