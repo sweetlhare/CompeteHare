@@ -1,2 +1,5 @@
 # requirements.txt
-gsheetsdb
+deta
+streamlit
+pandas
+numpy
